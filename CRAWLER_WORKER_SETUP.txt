@@ -1,0 +1,60 @@
+===================================
+PYTHON CRAWLER WORKER - SETUP GUIDE
+===================================
+
+ARCHITECTURE:
+- Frontend (React) → Triggers crawl start
+- Backend (Supabase Edge Function) → Creates session + seeds first URL
+- Python Worker (This file) → Polls database and crawls pages
+- Database (Supabase) → Source of truth for queue state
+
+SETUP:
+
+1. Install Python dependencies:
+   pip install -r requirements.txt
+
+2. Get your Supabase credentials:
+   - SUPABASE_URL: Your project URL (e.g., https://xxx.supabase.co)
+   - SUPABASE_SERVICE_ROLE_KEY: Your service role key (from Supabase dashboard)
+
+3. Run the worker:
+   python python_crawler_worker.py <SUPABASE_URL> <SUPABASE_SERVICE_ROLE_KEY>
+
+   Example:
+   python python_crawler_worker.py https://abc123.supabase.co eyJ...abc123
+
+4. The worker will:
+   ✅ Poll the crawl_queue table every 2 seconds
+   ✅ Crawl pending URLs one by one
+   ✅ Save pages immediately to database
+   ✅ Add discovered URLs back to queue
+   ✅ Run indefinitely (no timeout!)
+
+5. To stop the worker:
+   Press Ctrl+C
+
+6. To resume:
+   Just run the worker again - it will pick up where it left off!
+
+USAGE FLOW:
+
+1. User creates project in frontend
+2. Frontend calls /projects/:id/crawl endpoint
+3. Backend creates crawl_session and adds homepage to crawl_queue
+4. Python worker sees pending URL and starts crawling
+5. Pages appear in real-time as worker processes them
+6. Worker stops when queue is empty or max pages reached
+
+ADVANTAGES:
+✅ No 60-second timeout (runs as long as needed)
+✅ Resumable (just restart the worker)
+✅ Real-time streaming (pages saved immediately)
+✅ Database is source of truth (no in-memory state)
+✅ Can run on local machine, VPS, or cloud server
+✅ Multiple workers can run in parallel (auto-distributed via queue)
+
+NOTES:
+- Worker can run on your local machine, a VPS, or any server
+- No code changes needed - just run the Python script
+- Worker is stateless - you can stop/start anytime
+- Dashboard updates in real-time as pages are crawled
